@@ -28,8 +28,9 @@ jobs:
           $version = (Get-Content .\SteamMonitorLauncher\version.txt -Raw).Trim()
           if ($version -notmatch '^\d+\.\d+\.\d+$') { throw 'Invalid release version.' }
           $tag = "v$version"
-          gh release view $tag --repo $env:GITHUB_REPOSITORY *> $null
-          if ($LASTEXITCODE -eq 0) { throw "Release $tag already exists. Bump all version markers before publishing another build." }
+          $releases = gh release list --repo $env:GITHUB_REPOSITORY --limit 100 --json tagName
+          if ($LASTEXITCODE -ne 0) { throw "Could not list existing releases." }
+          if (($releases | ConvertFrom-Json).tagName -contains $tag) { throw "Release $tag already exists. Bump all version markers before publishing another build." }
           New-Item -ItemType Directory -Path dist -Force | Out-Null
           $zip = "dist/Steam_Monitor_Launcher_v${version}.zip"
           Compress-Archive -Path SteamMonitorLauncher -DestinationPath $zip

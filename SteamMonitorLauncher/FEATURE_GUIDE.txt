@@ -1,4 +1,4 @@
-STEAM MONITOR LAUNCHER 1.12.1
+STEAM MONITOR LAUNCHER 1.12.2
 
 INSTALL OR UPDATE
 Extract this full ZIP into a fresh folder and run Launch Steam Monitor.bat.
@@ -74,3 +74,19 @@ and protected processes may resist movement; windowed mode works best.
 
 Controller API reference:
 https://learn.microsoft.com/en-us/windows/win32/api/xinput/nf-xinput-xinputgetstate
+
+STEAMUNLOCKED LAUNCHER (1.12.2)
+Automatic detection recognizes steamunlocked-launcher.exe (case insensitive).
+Keep Steam Monitor running before starting a game through that launcher.
+The launcher window is never moved. Observable child/descendant game windows
+are moved using your monitor rules. The game appears in the library under
+SteamUnlocked after its window is detected; exclusions and per-game options
+use a stable identity based on the game executable path. New game executables
+are kept in the library for the current watcher session, not written as imports.
+You can add an EXE manually to retain it permanently.
+This integration follows Windows process ancestry; it does not read a launcher
+library database. Games started through a separate service, an unobserved
+short-lived parent, or a protected process may need manual EXE/folder tracking.
+A discovered game's Play button starts its EXE directly. If it needs the
+launcher, start it there or configure a store shortcut as its launch method.
+No game downloading, login automation or game-file modification is involved.

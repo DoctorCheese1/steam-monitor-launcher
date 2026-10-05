@@ -36,6 +36,11 @@ public static class Diagnostics {
         var release=ReleaseClient.Parse("{\"Version\":\"2.0.0\",\"PackageUrl\":\"https://example.invalid/update.zip\",\"Sha256\":\""+new string('a',64)+"\"}","https://example.invalid/latest.json");
         if(release.Version!="2.0.0")throw new InvalidDataException("Release feed parsing failed");
         bool invalidRejected=false;try{ReleaseClient.Parse("{\"Version\":\"2.0.0\",\"PackageUrl\":\"http://example.invalid/update.zip\",\"Sha256\":\""+new string('a',64)+"\"}","");}catch(InvalidDataException){invalidRejected=true;}if(!invalidRejected)throw new InvalidDataException("Insecure update URL was accepted");
+        if(!Watcher.IsSteamUnlockedLauncher(@"C:\Apps\STEAMUNLOCKED-LAUNCHER.EXE")||Watcher.IsSteamUnlockedLauncher(@"C:\Apps\other-steamunlocked-launcher.exe"))throw new InvalidDataException("SteamUnlocked launcher filename matching failed");
+        var su=Watcher.SteamUnlockedGame(@"C:\Games\One\game.exe");var suAgain=Watcher.SteamUnlockedGame(@"c:\games\one\GAME.exe");var suOther=Watcher.SteamUnlockedGame(@"C:\Games\Two\game.exe");
+        if(su.Id!=suAgain.Id||su.Id==suOther.Id||su.MatchFolder||su.Source!="SteamUnlocked")throw new InvalidDataException("SteamUnlocked game identity failed");
+        var ancestor=new ProcessRecord{Id=1,Born=new DateTime(2026,1,1)};var child=new ProcessRecord{Id=2,Born=new DateTime(2026,1,2)};
+        if(!Watcher.CanInherit(child,ancestor,null)||Watcher.CanInherit(child,ancestor,new ProcessRecord{Id=1,Born=new DateTime(2026,1,3)})||Watcher.CanInherit(ancestor,ancestor,ancestor))throw new InvalidDataException("Launcher ancestry identity validation failed");
         var bounds=Launcher.SavedBounds(legacy.Profiles[0],new Rectangle(-1920,0,1920,1080));
         if(bounds!=new Rectangle(-1920,480,1920,600))throw new InvalidDataException("Saved layout bounds clamp failed");
         using(var form=new Launcher(false,true)){form.CreateControl();form.PerformLayout();}

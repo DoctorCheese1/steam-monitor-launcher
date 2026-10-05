@@ -1,4 +1,4 @@
-STEAM MONITOR LAUNCHER 1.12.1 - PROFILES AND TOOLS
+STEAM MONITOR LAUNCHER 1.12.2 - PROFILES AND TOOLS
 
 INSTALL / UPDATE
 Extract the whole ZIP into a new folder and run Launch Steam Monitor.bat.
@@ -121,7 +121,7 @@ replacing the installation. Real monitor behavior, hotkeys and game compatibilit
 still require Windows testing. Report install.log for build failures and
 watcher.log for detection/movement problems.
 
-VERSION 1.12.1 - LIBRARY LAYOUT REPAIR
+VERSION 1.12.2 - LIBRARY LAYOUT REPAIR
 The Exclude / Manage exclusions buttons now have explicit side-by-side bounds
 inside a plain panel; nested-table button autosizing can no longer exceed the
 row and hide their labels. Bounds update whenever the window is resized.
@@ -132,7 +132,7 @@ All v1.8 features and saved preferences remain available.
 
 - Search label and input now share one font, with centered text and measured spacing.
 
-VERSION 1.12.1 - MULTI-LAUNCHER SUPPORT
+VERSION 1.12.2 - MULTI-LAUNCHER SUPPORT
 Automatic local discovery: Steam, Epic Games manifests, GOG installed-game
 registry entries and Ubisoft Connect installed-game registry entries.
 Click Refresh games after installing a new title. No Steam install is required
@@ -160,7 +160,7 @@ All detected/custom games use existing monitor profiles, exclusions, startup,
 tray operation and layout controls. Existing settings remain compatible.
 Windows compilation and live store/game behavior require testing on Windows.
 
-VERSION 1.12.1 - BUILT-IN ZIP UPDATER
+VERSION 1.12.2 - BUILT-IN ZIP UPDATER
 Install this release with Launch Steam Monitor.bat once. Future releases can
 be installed from Game settings / Tools > Launcher updater, or the tray menu.
 Select the full downloaded ZIP without extracting it. Confirm the version.
@@ -174,8 +174,8 @@ Only choose trusted release ZIPs: package validation is not a digital signature.
 Online checks and verified downloads are now available. Configure your hosted
 release feed URL; see LIVE_UPDATES.txt.
 
-VERSION 1.12.1 - LIBRARY, MOVEMENT, PORTABLE AND RECOVERY FEATURES
+VERSION 1.12.2 - LIBRARY, MOVEMENT, PORTABLE AND RECOVERY FEATURES
 See FEATURE_GUIDE.txt for the complete new controls and updater instructions.
 
-VERSION 1.12.1 - ONLINE UPDATER
+VERSION 1.12.2 - ONLINE UPDATER
 Read LIVE_UPDATES.txt to connect a live release source and publish updates.

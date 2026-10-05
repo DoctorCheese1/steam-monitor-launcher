@@ -1,0 +1,57 @@
+STEAM MONITOR LAUNCHER - LIVE UPDATE SETUP
+
+The default feed is configured for:
+https://github.com/DoctorCheese1/steam-monitor-launcher/releases/latest/download/latest.json
+
+GitHub Actions builds and publishes releases after Windows startup validation.
+The URL becomes live after the first successful workflow. A GitHub release is
+required; saving a ZIP only in this chat does not publish it.
+
+USING THE UPDATER
+1. Install this package once with Launch Steam Monitor.bat (or use an existing
+   ZIP updater). Portable builds use Build Portable.bat.
+2. Open Tools > Launcher updater, or Launcher updater in the tray menu.
+3. Enter your public HTTPS latest.json address and save it.
+4. Check now displays the published version. If newer, download it, then choose
+   Install verified update. The normal installer checks startup before replacing
+   the old executable. Monitor preferences and exclusions are retained.
+5. Enable automatic checks for startup and six-hour checks. These only notify.
+   Installation always waits for you. Downloads can be canceled. Network reads
+   time out after 20 seconds; cancel can wait for the current read to finish.
+
+PUBLISHING RELEASES
+Host the full release ZIP on your website or a public GitHub Release. The ZIP
+must contain the SteamMonitorLauncher folder with its normal source files,
+Install.ps1, Update.ps1, and version.txt. Keep older assets available while
+clients may still be downloading them.
+
+Run the included helper in PowerShell, using your actual download address:
+  .\Publish-Release-Feed.ps1 -PackagePath "C:\Releases\launcher.zip" -PackageUrl "https://YOUR-HOST/releases/launcher.zip" -Notes "Release notes"
+
+It reads the package version and calculates its SHA-256 hash into latest.json.
+Upload the ZIP first, then latest.json. Give latest.json a stable public HTTPS
+URL that serves the raw JSON file, not a login page or HTML download page.
+Short caching / no-cache on latest.json helps updates become visible promptly.
+The helper does not upload files or create a hosting account.
+
+Each feed has these case-sensitive JSON fields:
+  Version: three numeric components, e.g. 1.12.1
+  PackageUrl: direct HTTPS ZIP download URL
+  Sha256: 64-character SHA-256 hex digest of that exact ZIP
+  Notes: plain text release notes
+
+For each new release, increase the app/package version, publish a fresh ZIP,
+regenerate latest.json and replace the hosted feed. A higher advertised version
+must match version.txt inside the downloaded ZIP. Never advertise an invented
+version to force a reinstall; use Install a downloaded ZIP for repairs.
+
+SECURITY AND LIMITS
+Use a release source you control/trust. SHA-256 detects corrupt or substituted
+package bytes relative to the feed; it is not a publisher signature. HTTPS and
+control of the feed determine publisher trust. HTTP downgrade redirects and
+URLs with embedded credentials are rejected. Downloads are capped at 50 MB,
+feeds at 64 KB. The ZIP updater also checks extraction paths, package structure
+and version before running the installer. No credentials are stored for feeds.
+
+Source/package checks were performed here. Windows compilation, networking,
+UI and live installation still need testing on Windows against your real host.

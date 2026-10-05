@@ -1,0 +1,7 @@
+validation-output/
+dist/
+**/bin/
+**/Portable/
+**/build-*/
+*.exe
+*.exe.previous

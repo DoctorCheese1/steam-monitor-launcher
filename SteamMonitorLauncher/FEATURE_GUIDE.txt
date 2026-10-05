@@ -1,0 +1,76 @@
+STEAM MONITOR LAUNCHER 1.12.1
+
+INSTALL OR UPDATE
+Extract this full ZIP into a fresh folder and run Launch Steam Monitor.bat.
+If v1.10.0 or later is installed, use Tools > Launcher updater and choose this
+ZIP directly. Existing preferences remain in place. Updater also accepts the
+same version for repair. It rejects downgrades, checks the package, saves a
+settings backup, compiles/tests the new app, then replaces the old EXE.
+Online update checks are available after configuring a release feed URL.
+See LIVE_UPDATES.txt for setup and publishing instructions.
+
+GAME LIBRARY / CONTROLLER VIEW
+Open Library / Game settings / Tools, then the library/controller view.
+Also accessible from the tray menu. Select a store, favorites, or recently
+played filter. Play launches the highlighted game. Favorite toggles its saved
+favorite status. Recently played includes launches here and detected sessions
+while monitoring. Set artwork imports a local image into the app data folder;
+artwork is not downloaded automatically.
+XInput-compatible controllers: D-pad or left stick up/down selects games;
+A launches, B closes the view, Y toggles favorite, LB changes store, RB changes
+all/favorites/recent. Controller input is read only while this view is focused.
+Keyboard up/down, Enter and Escape also work. Non-XInput devices need their
+normal XInput compatibility layer; native DirectInput support is not included.
+
+IMPORT
+Scan game folders searches subfolders in the background and presents unchecked
+EXE candidates. Check the actual game EXEs to import. It skips common installer
+names and symbolic/junction subfolders. Scan limit: 3000 folders / 1000 EXEs.
+Duplicate custom executable paths are skipped. No candidate is launched.
+Import desktop / Start Menu shortcuts accepts .lnk files. Review target paths.
+For shortcuts that point to a store client or URL, add the actual game EXE
+manually and select the store shortcut as its launch method instead.
+
+MOVEMENT AND LAUNCH OPTIONS
+Select a game in the MAIN list before opening Tools to edit its options.
+Startup delay: 0-600 seconds, measured per newly detected window.
+Stop after placement: stops automatic repositioning of that window once it is
+on target or its requested placement has been verified. Replacement windows
+are handled separately. Monitor changes/settings changes restart placement.
+Launch method: Default uses detected store/EXE; Executable uses a chosen EXE
+and optional arguments; Shortcut launches a selected .lnk or .url file. These
+options do not replace the game's detection EXE/folder.
+Monitor disconnect fallback: optional selected display, or primary display.
+If the preferred fallback is also missing, primary display is used. The saved
+target is not changed. Display changes trigger a new placement check.
+
+TROUBLESHOOTING AND RECOVERY
+Export troubleshooting report produces a local text file with display details,
+window detection/status, and recent watcher logs. Review before sharing; window
+titles and local paths can appear. Nothing is uploaded automatically.
+Each settings save retains the previous version. Last 20 automatic revisions
+are kept in backups. Update/import backups are retained separately.
+Recover settings from automatic backup previews a file picker and asks before
+restoring. Invalid current settings prompt recovery on opening the launcher.
+Registry startup registration is not changed by restoring a backup.
+
+PORTABLE BUILD
+Run Build Portable.bat from the extracted full package. The Portable subfolder
+contains the compiled EXE, updater, version marker and portable.flag. Settings,
+artwork, logs and backups stay there. Copy the whole Portable folder to move it.
+Run Portable\SteamMonitorLauncher.exe directly. Windows startup is not enabled
+automatically. If you enable it, disable it before moving/removing that folder.
+Game paths and shortcuts may need updating on another computer. Use the built-in
+ZIP updater in portable mode to update in place. Delete the portable folder to
+remove it after exiting; this does not uninstall an installed-mode copy.
+
+VALIDATION LIMITS
+Package integrity, source delimiter and build-inventory checks were run here.
+No Windows compiler/runtime was available here. The installer runs compilation
+and startup/serialization/icon checks on your PC before replacing the old EXE.
+Windows rendering, controller hardware, store launching, portable update flow,
+and real game positioning still require Windows testing. Exclusive fullscreen
+and protected processes may resist movement; windowed mode works best.
+
+Controller API reference:
+https://learn.microsoft.com/en-us/windows/win32/api/xinput/nf-xinput-xinputgetstate

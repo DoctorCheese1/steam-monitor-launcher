@@ -41,9 +41,21 @@ public static class Diagnostics {
         if(su.Id!=suAgain.Id||su.Id==suOther.Id||su.MatchFolder||su.Source!="SteamUnlocked")throw new InvalidDataException("SteamUnlocked game identity failed");
         var ancestor=new ProcessRecord{Id=1,Born=new DateTime(2026,1,1)};var child=new ProcessRecord{Id=2,Born=new DateTime(2026,1,2)};
         if(!Watcher.CanInherit(child,ancestor,null)||Watcher.CanInherit(child,ancestor,new ProcessRecord{Id=1,Born=new DateTime(2026,1,3)})||Watcher.CanInherit(ancestor,ancestor,ancestor))throw new InvalidDataException("Launcher ancestry identity validation failed");
+
+        var json=new System.Web.Script.Serialization.JavaScriptSerializer();
+        var imported=SteamUnlockedLibrary.Parse(json.Serialize(new[]{new {id="fixture",name="Example Game",folder_path=@"D:\Saved Games\Downloads\Example",catalog_id=42,exe_path=(string)null}}),false);
+        if(imported.Count!=1||imported[0].Executable!=""||!imported[0].MatchFolder||imported[0].Id!="steamunlocked:catalog:42")throw new InvalidDataException("Custom library import failed");
+        var downloads=SteamUnlockedLibrary.Parse(json.Serialize(new[]{
+            new {id="one",game_id=43,game_title="Example Two Free Download (v1.0)",save_dir=@"C:\SteamUnlocked",status="dismissed",extracted_folder="ExampleTwo",exe_path=@"ExampleTwo\Binaries\game.exe"},
+            new {id="two",game_id=44,game_title="Pending",save_dir=@"C:\SteamUnlocked",status="paused",extracted_folder="Pending",exe_path=""},
+            new {id="three",game_id=45,game_title="Unsafe",save_dir=@"C:\SteamUnlocked",status="completed",extracted_folder=@"..\Outside",exe_path=""},
+            new {id="four",game_id=43,game_title="Duplicate",save_dir=@"C:\SteamUnlocked",status="completed",extracted_folder="ExampleTwo",exe_path=""}
+        }),true);
+        if(downloads.Count!=1||downloads[0].Name!="Example Two"||downloads[0].Executable!=@"C:\SteamUnlocked\ExampleTwo\Binaries\game.exe")throw new InvalidDataException("Download library import, filtering or executable resolution failed");
+        if(!SteamUnlockedLibrary.Within(@"D:\Saved Games\Downloads\Example\Binaries\game.exe",imported[0].Folder)||SteamUnlockedLibrary.Within(@"D:\Saved Games\Downloads\ExampleOther\game.exe",imported[0].Folder))throw new InvalidDataException("Library folder boundary failed");
         var bounds=Launcher.SavedBounds(legacy.Profiles[0],new Rectangle(-1920,0,1920,1080));
         if(bounds!=new Rectangle(-1920,480,1920,600))throw new InvalidDataException("Saved layout bounds clamp failed");
         using(var form=new Launcher(false,true)){form.CreateControl();form.PerformLayout();}
-        Directory.CreateDirectory(Folder);File.WriteAllText(Path.Combine(Folder,"startup-check.log"),"PASS: assembly, both embedded icons at 16/32/48/256px, standalone header PNG, exclusion persistence/identity, profile/custom-game serialization, saved-layout bounds, and settings form construction/layout. Game positioning not tested.");return 0;
+        Directory.CreateDirectory(Folder);File.WriteAllText(Path.Combine(Folder,"startup-check.log"),"PASS: assembly, both embedded icons at 16/32/48/256px, standalone header PNG, exclusion persistence/identity, profile/custom-game serialization, saved-layout bounds, and settings form construction/layout. SteamUnlocked JSON parsing, download filtering, path boundaries and deduplication passed. Game positioning not tested.");return 0;
     }catch(Exception ex){try{Directory.CreateDirectory(Folder);File.WriteAllText(Path.Combine(Folder,"startup-check.log"),ex.ToString());}catch{}return 1;}}
 }

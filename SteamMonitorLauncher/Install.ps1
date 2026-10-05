@@ -14,8 +14,8 @@ $transcribing = $false
 try {
     Start-Transcript -Path $log -Force | Out-Null
     $transcribing = $true
-    Write-Host 'Steam Monitor Launcher 1.12.2 - Install / Repair'
-    $required = @('Launcher.cs','Native.cs','SteamLibrary.cs','OtherLibraries.cs','Updater.cs','LibraryPlus.cs','Watcher.cs','Interface.cs','Diagnostics.cs','Exclusions.cs','Features.cs','Displays.cs','app.manifest','Launcher.ico','LauncherPaused.ico','Assets\Launcher.png','Uninstall.ps1','Update.ps1','version.txt')
+    Write-Host 'Steam Monitor Launcher 1.12.3 - Install / Repair'
+    $required = @('Launcher.cs','Native.cs','SteamLibrary.cs','OtherLibraries.cs','SteamUnlockedLibrary.cs','Updater.cs','LibraryPlus.cs','Watcher.cs','Interface.cs','Diagnostics.cs','Exclusions.cs','Features.cs','Displays.cs','app.manifest','Launcher.ico','LauncherPaused.ico','Assets\Launcher.png','Uninstall.ps1','Update.ps1','version.txt')
     foreach ($name in $required) {
         if (-not (Test-Path -LiteralPath (Join-Path $root $name) -PathType Leaf)) {
             throw "Missing $name. Extract the ENTIRE ZIP into a new folder before running setup."
@@ -36,7 +36,7 @@ try {
         ('/resource:' + (Join-Path $root 'LauncherPaused.ico') + ',LauncherPaused.ico'),
         ('/resource:' + (Join-Path $root 'Assets\Launcher.png') + ',LauncherHeader.png'),
         '/reference:System.Windows.Forms.dll','/reference:System.Drawing.dll','/reference:System.Xml.dll','/reference:System.Core.dll','/reference:System.Web.Extensions.dll')
-    foreach ($name in @('Launcher.cs','Native.cs','SteamLibrary.cs','OtherLibraries.cs','Updater.cs','LibraryPlus.cs','Watcher.cs','Interface.cs','Diagnostics.cs','Exclusions.cs','Features.cs','Displays.cs')) { $arguments += Join-Path $root $name }
+    foreach ($name in @('Launcher.cs','Native.cs','SteamLibrary.cs','OtherLibraries.cs','SteamUnlockedLibrary.cs','Updater.cs','LibraryPlus.cs','Watcher.cs','Interface.cs','Diagnostics.cs','Exclusions.cs','Features.cs','Displays.cs')) { $arguments += Join-Path $root $name }
     Write-Host 'Building a fresh executable (including same-version repairs)...'
     $output = & $compiler @arguments 2>&1
     $compileExit = $LASTEXITCODE
@@ -86,7 +86,7 @@ try {
         $uninstallKey = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\SteamMonitorLauncher'
         New-Item -Path $uninstallKey -Force | Out-Null
         New-ItemProperty -Path $uninstallKey -Name DisplayName -Value 'Steam Monitor Launcher' -PropertyType String -Force | Out-Null
-        New-ItemProperty -Path $uninstallKey -Name DisplayVersion -Value '1.12.2' -PropertyType String -Force | Out-Null
+        New-ItemProperty -Path $uninstallKey -Name DisplayVersion -Value '1.12.3' -PropertyType String -Force | Out-Null
         New-ItemProperty -Path $uninstallKey -Name InstallLocation -Value $appDir -PropertyType String -Force | Out-Null
         $uninstallCommand = 'powershell.exe -NoProfile -ExecutionPolicy Bypass -File "' + (Join-Path $dataDir 'Uninstall.ps1') + '"'
         New-ItemProperty -Path $uninstallKey -Name UninstallString -Value $uninstallCommand -PropertyType String -Force | Out-Null

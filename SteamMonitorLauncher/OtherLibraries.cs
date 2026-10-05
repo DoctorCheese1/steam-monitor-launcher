@@ -27,6 +27,7 @@ public static class OtherLibraries {
         if(!games.Any(g=>g.Id==game.Id||String.Equals(g.Folder.TrimEnd('\\'),game.Folder,StringComparison.OrdinalIgnoreCase)))games.Add(game);
     }
     public static void Scan(List<Game> games){
+        try{SteamUnlockedLibrary.Scan(games);}catch(Exception ex){Diagnostics.Write("SteamUnlocked discovery: "+ex.GetType().Name);}
         try{ScanEpic(games);}catch(Exception ex){Diagnostics.Write("Epic discovery: "+ex.Message);}
         foreach(var hive in new[]{RegistryHive.LocalMachine,RegistryHive.CurrentUser})foreach(var view in new[]{RegistryView.Registry32,RegistryView.Registry64}){
             try{using(var registry=RegistryKey.OpenBaseKey(hive,view)){

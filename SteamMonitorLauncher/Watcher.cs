@@ -33,7 +33,9 @@ public class Watcher {
         DateTime now=DateTime.UtcNow;string signature=String.Join("|",custom.Select(g=>g.Id+g.Executable+g.Name+g.Arguments+g.Folder+g.MatchFolder));if(signature!=customSignature){cache.Clear();family.Clear();customSignature=signature;}
         bool rescan=refresh||(now-lastScan).TotalSeconds>=60;
         if(rescan){library.Steam=steam;library.Scan();lastScan=now;cache.Clear();}
-        var catalog=library.games.Concat(custom).Concat(discovered.Values.Where(d=>!custom.Any(g=>String.Equals(g.Executable,d.Executable,StringComparison.OrdinalIgnoreCase)))).OrderBy(g=>g.Name,StringComparer.CurrentCultureIgnoreCase).ToList();
+        var catalog=library.games.Concat(custom).Concat(discovered.Values.Where(d=>!library.games.Concat(custom).Any(g=>String.Equals(g.Executable,d.Executable,StringComparison.OrdinalIgnoreCase)||(g.MatchFolder&&SteamUnlockedLibrary.Within(d.Executable,g.Folder))))).OrderBy(g=>g.Name,StringComparer.CurrentCultureIgnoreCase).ToList();
+        // Drop earlier session-only entries once the real library owns their folder.
+        foreach(string path in discovered.Keys.ToArray())if(library.games.Any(g=>g.Source=="SteamUnlocked"&&SteamUnlockedLibrary.Within(path,g.Folder)))discovered.Remove(path);
         var result=new WatchResult{Games=catalog,Steam=library.Steam,Message=library.Message};
         var parents=Native.Parents();var alive=new Dictionary<uint,ProcessRecord>();
         foreach(var process in Process.GetProcesses())using(process){try{

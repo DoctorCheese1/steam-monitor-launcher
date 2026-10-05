@@ -17,7 +17,7 @@ public class OnlineRelease {
     public string FeedUrl;
 }
 public static class ReleaseClient {
-    public const string Current="1.12.2";
+    public const string Current="1.12.3";
     public const string DefaultFeed="https://github.com/DoctorCheese1/steam-monitor-launcher/releases/latest/download/latest.json";
     public static Uri Https(string url){Uri uri;if(!Uri.TryCreate(url,UriKind.Absolute,out uri)||uri.Scheme!=Uri.UriSchemeHttps||!String.IsNullOrEmpty(uri.UserInfo))throw new InvalidDataException("Enter a public HTTPS release URL without embedded credentials.");return uri;}
     static HttpWebResponse Open(string url){

@@ -35,7 +35,7 @@ Short caching / no-cache on latest.json helps updates become visible promptly.
 The helper does not upload files or create a hosting account.
 
 Each feed has these case-sensitive JSON fields:
-  Version: three numeric components, e.g. 1.12.2
+  Version: three numeric components, e.g. 1.12.3
   PackageUrl: direct HTTPS ZIP download URL
   Sha256: 64-character SHA-256 hex digest of that exact ZIP
   Notes: plain text release notes

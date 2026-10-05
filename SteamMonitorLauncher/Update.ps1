@@ -34,7 +34,7 @@ try {
         }
     } finally { $zip.Dispose() }
     $root = Join-Path $work 'SteamMonitorLauncher'
-    foreach ($required in @('version.txt','Install.ps1','Update.ps1','Launcher.cs','Updater.cs','LibraryPlus.cs','Interface.cs','SteamLibrary.cs','OtherLibraries.cs','Watcher.cs','Native.cs','Features.cs','Displays.cs','Exclusions.cs','Diagnostics.cs','app.manifest','Launcher.ico','LauncherPaused.ico','Assets\Launcher.png','Uninstall.ps1')) {
+    foreach ($required in @('version.txt','Install.ps1','Update.ps1','Launcher.cs','Updater.cs','LibraryPlus.cs','Interface.cs','SteamLibrary.cs','OtherLibraries.cs','SteamUnlockedLibrary.cs','Watcher.cs','Native.cs','Features.cs','Displays.cs','Exclusions.cs','Diagnostics.cs','app.manifest','Launcher.ico','LauncherPaused.ico','Assets\Launcher.png','Uninstall.ps1')) {
         if (-not (Test-Path -LiteralPath (Join-Path $root $required) -PathType Leaf)) { throw "Incomplete update package: missing $required" }
     }
     $versionText = (Get-Content -LiteralPath (Join-Path $root 'version.txt') -Raw).Trim()

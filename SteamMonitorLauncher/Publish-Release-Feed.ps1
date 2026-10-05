@@ -11,7 +11,7 @@ if (-not (Test-Path -LiteralPath $PackagePath -PathType Leaf)) { throw 'Package 
 Add-Type -AssemblyName System.IO.Compression.FileSystem
 $zip = [IO.Compression.ZipFile]::OpenRead([IO.Path]::GetFullPath($PackagePath))
 try {
-    $entry = $zip.GetEntry('SteamMonitorLauncher/version.txt')
+    $entry = @($zip.Entries | Where-Object { $_.FullName.Replace('\','/') -eq 'SteamMonitorLauncher/version.txt' }) | Select-Object -First 1
     if (-not $entry) { throw 'Package version.txt is missing.' }
     if ($entry.Length -gt 128) { throw 'Package version is invalid.' }
     $reader = New-Object IO.StreamReader($entry.Open())

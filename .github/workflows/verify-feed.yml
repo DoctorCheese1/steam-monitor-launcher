@@ -20,7 +20,8 @@ jobs:
           $ErrorActionPreference = 'Stop'
           [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
           $feedUrl = 'https://github.com/DoctorCheese1/steam-monitor-launcher/releases/latest/download/latest.json'
-          $feed = Invoke-RestMethod -Uri $feedUrl -TimeoutSec 30
+          Invoke-WebRequest -UseBasicParsing -Uri $feedUrl -OutFile latest.json -TimeoutSec 30
+          $feed = Get-Content latest.json -Raw | ConvertFrom-Json
           if ($feed.Version -notmatch '^\d+\.\d+\.\d+$') { throw 'Feed version is invalid.' }
           if ($feed.Sha256 -notmatch '^[a-fA-F0-9]{64}$') { throw 'Feed hash is invalid.' }
           $expected = "https://github.com/DoctorCheese1/steam-monitor-launcher/releases/download/v$($feed.Version)/Steam_Monitor_Launcher_v$($feed.Version).zip"

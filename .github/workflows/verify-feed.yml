@@ -1,0 +1,33 @@
+name: Verify live update feed
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/verify-feed.yml']
+  workflow_run:
+    workflows: ['Build and publish launcher']
+    types: [completed]
+permissions:
+  contents: read
+jobs:
+  verify:
+    if: github.event_name == 'push' || github.event.workflow_run.conclusion == 'success'
+    runs-on: windows-latest
+    timeout-minutes: 5
+    steps:
+      - name: Fetch public feed and verify release ZIP
+        shell: powershell
+        run: |
+          $ErrorActionPreference = 'Stop'
+          [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+          $feedUrl = 'https://github.com/DoctorCheese1/steam-monitor-launcher/releases/latest/download/latest.json'
+          $feed = Invoke-RestMethod -Uri $feedUrl -TimeoutSec 30
+          if ($feed.Version -notmatch '^\d+\.\d+\.\d+$') { throw 'Feed version is invalid.' }
+          if ($feed.Sha256 -notmatch '^[a-fA-F0-9]{64}$') { throw 'Feed hash is invalid.' }
+          $expected = "https://github.com/DoctorCheese1/steam-monitor-launcher/releases/download/v$($feed.Version)/Steam_Monitor_Launcher_v$($feed.Version).zip"
+          if ($feed.PackageUrl -ne $expected) { throw 'Unexpected release package URL.' }
+          Invoke-WebRequest -UseBasicParsing -Uri $feed.PackageUrl -OutFile package.zip -TimeoutSec 60
+          if ((Get-FileHash package.zip -Algorithm SHA256).Hash -ne $feed.Sha256) { throw 'Package checksum mismatch.' }
+          Expand-Archive package.zip -DestinationPath package
+          $version = (Get-Content package/SteamMonitorLauncher/version.txt -Raw).Trim()
+          if ($version -ne $feed.Version) { throw 'Package version differs from live feed.' }
+          Write-Host "Live feed, ZIP download, SHA-256 and package version verified: $version"

@@ -40,7 +40,7 @@ jobs:
           Compress-Archive -Path SteamMonitorLauncher -DestinationPath $zip
           $url = "https://github.com/$env:GITHUB_REPOSITORY/releases/download/$tag/Steam_Monitor_Launcher_v${version}.zip"
           & .\SteamMonitorLauncher\Publish-Release-Feed.ps1 -PackagePath $zip -PackageUrl $url -Notes "Launcher $version. Full source, installer and live updater. Windows compilation and startup checks passed." -OutputPath dist/latest.json
-          gh release create $tag $zip dist/latest.json validation-output/logs/interface-preview.png validation-output/logs/window-picker-preview.png --repo $env:GITHUB_REPOSITORY --target $env:GITHUB_SHA --title "Steam Monitor Launcher $version" --notes "Full launcher package. Download the ZIP and run Launch Steam Monitor.bat, or use the built-in updater. Windows compilation and startup checks passed; real game and controller behavior require hardware testing." --latest
+          gh release create $tag $zip dist/latest.json validation-output/logs/interface-preview.png validation-output/logs/window-picker-preview.png validation-output/logs/setup-tutorial-preview.png --repo $env:GITHUB_REPOSITORY --target $env:GITHUB_SHA --title "Steam Monitor Launcher $version" --notes "Full launcher package. Download the ZIP and run Launch Steam Monitor.bat, or use the built-in updater. Windows compilation and startup checks passed; real game and controller behavior require hardware testing." --latest
           if ($LASTEXITCODE -ne 0) { throw 'Publishing release failed.' }
       - name: Upload validation logs
         if: always()

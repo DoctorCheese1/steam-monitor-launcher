@@ -11,8 +11,8 @@ using System.Windows.Forms;
 using System.Xml.Serialization;
 using Microsoft.Win32;
 
-[assembly: System.Reflection.AssemblyFileVersion("1.14.0.0")]
-[assembly: System.Reflection.AssemblyVersion("1.14.0.0")]
+[assembly: System.Reflection.AssemblyFileVersion("1.14.1.0")]
+[assembly: System.Reflection.AssemblyVersion("1.14.1.0")]
 
 public class Profile {
     public string Id="", Monitor="", MonitorKey=""; public bool Borderless, Override, UseLayout;
@@ -81,7 +81,7 @@ public partial class Launcher:Form {
     protected override void WndProc(ref Message m){if(m.Msg==0x312){HandleHotkey(m.WParam.ToInt32());return;}if(m.Msg==0x7e){Displays.Invalidate();states.Clear();}if(m.Msg==ShowMessage){OpenSettings();return;}base.WndProc(ref m);}
     public Launcher(bool startHidden,bool selfTest=false){
         background=startHidden;
-        Text="Steam Monitor Launcher 1.14.0";Size=new Size(1080,840);MinimumSize=new Size(980,760);StartPosition=FormStartPosition.CenterScreen;
+        Text="Steam Monitor Launcher 1.14.1";Size=new Size(1080,840);MinimumSize=new Size(980,760);StartPosition=FormStartPosition.CenterScreen;
         Font=new Font("Segoe UI",10);BackColor=Color.FromArgb(20,26,35);ForeColor=Color.FromArgb(233,239,248);AutoScaleDimensions=new SizeF(96,96);AutoScaleMode=AutoScaleMode.Dpi;
         try{if(!selfTest&&File.Exists(Config))using(var f=File.OpenRead(Config))settings=(Settings)new XmlSerializer(typeof(Settings)).Deserialize(f);}catch{settings=new Settings();recoveryNeeded=true;}
         NormalizeSettings(settings);

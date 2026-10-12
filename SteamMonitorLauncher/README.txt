@@ -1,3 +1,9 @@
+VERSION 1.14.1 - SETUP TUTORIAL
+Six guided steps cover default monitor selection and testing, automatic
+movement, Windows startup/tray use, game settings, manual window tools, and
+a review before saving. Use Back / Next, then Finish setup. Reopen with the
+Setup tutorial button on the main screen or Tools > Display controls.
+
 VERSION 1.14.0 - MANUAL WINDOW TOOLS AND SETUP
 - Tools > Display controls > Move a running window: search window titles,
   Pick window by click, Move, Remember monitor, Undo, and Resume auto-move.

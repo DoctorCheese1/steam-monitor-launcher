@@ -11,8 +11,8 @@ using System.Windows.Forms;
 using System.Xml.Serialization;
 using Microsoft.Win32;
 
-[assembly: System.Reflection.AssemblyFileVersion("1.13.1.0")]
-[assembly: System.Reflection.AssemblyVersion("1.13.1.0")]
+[assembly: System.Reflection.AssemblyFileVersion("1.13.2.0")]
+[assembly: System.Reflection.AssemblyVersion("1.13.2.0")]
 
 public class Profile {
     public string Id="", Monitor="", MonitorKey=""; public bool Borderless, Override, UseLayout;
@@ -80,7 +80,7 @@ public partial class Launcher:Form {
     protected override void WndProc(ref Message m){if(m.Msg==0x312){HandleHotkey(m.WParam.ToInt32());return;}if(m.Msg==0x7e){Displays.Invalidate();states.Clear();}if(m.Msg==ShowMessage){OpenSettings();return;}base.WndProc(ref m);}
     public Launcher(bool startHidden,bool selfTest=false){
         background=startHidden;
-        Text="Steam Monitor Launcher 1.13.1";Size=new Size(1080,840);MinimumSize=new Size(980,760);StartPosition=FormStartPosition.CenterScreen;
+        Text="Steam Monitor Launcher 1.13.2";Size=new Size(1080,840);MinimumSize=new Size(980,760);StartPosition=FormStartPosition.CenterScreen;
         Font=new Font("Segoe UI",10);BackColor=Color.FromArgb(20,26,35);ForeColor=Color.FromArgb(233,239,248);AutoScaleDimensions=new SizeF(96,96);AutoScaleMode=AutoScaleMode.Dpi;
         try{if(!selfTest&&File.Exists(Config))using(var f=File.OpenRead(Config))settings=(Settings)new XmlSerializer(typeof(Settings)).Deserialize(f);}catch{settings=new Settings();recoveryNeeded=true;}
         NormalizeSettings(settings);
@@ -166,6 +166,33 @@ public partial class Launcher:Form {
 
         }
     }
-    void ManualMove(){var matched=Displays.Resolve(settings.MonitorKey,settings.Monitor);var screen=matched==null?null:matched.Screen;if(screen==null){Say("Choose a connected monitor first.");return;}using(var f=new Form{Text="Select a game window",Size=new Size(700,490),StartPosition=FormStartPosition.CenterParent,BackColor=Theme.Card,ForeColor=Theme.Text,Icon=appIcon}){var list=new ListBox{Dock=DockStyle.Fill,Font=Font,BackColor=Theme.Card,ForeColor=Theme.Text,BorderStyle=BorderStyle.None,ItemHeight=30};foreach(var w in Native.Windows()){uint pid;Native.GetWindowThreadProcessId(w.Handle,out pid);if(pid!=(uint)Process.GetCurrentProcess().Id)list.Items.Add(w);}var b=new ModernButton{Text="Move selected window",Dock=DockStyle.Bottom,Height=48,Primary=true};b.Click+=delegate{var w=list.SelectedItem as WindowItem;if(w==null)return;Say(Native.Move(w.Handle,screen,settings.Borderless)?"Move requested.":"Windows could not move that window.");f.Close();};f.Controls.Add(list);f.Controls.Add(b);f.ShowDialog(this);}}
+    void ManualMove(){using(var form=CreateWindowPicker())form.ShowDialog(this);}
+    internal Form CreateWindowPicker(){
+        var form=new Form{Text="Move a running window",Size=new Size(760,580),MinimumSize=new Size(620,460),StartPosition=FormStartPosition.CenterParent,BackColor=Theme.Card,ForeColor=Theme.Text,Icon=appIcon,Font=Font};
+        var layout=new TableLayoutPanel{Dock=DockStyle.Fill,Padding=new Padding(16),ColumnCount=1,RowCount=5};layout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent,100));
+        layout.RowStyles.Add(new RowStyle(SizeType.Absolute,50));layout.RowStyles.Add(new RowStyle(SizeType.Absolute,42));layout.RowStyles.Add(new RowStyle(SizeType.Percent,100));layout.RowStyles.Add(new RowStyle(SizeType.Absolute,58));layout.RowStyles.Add(new RowStyle(SizeType.Absolute,48));form.Controls.Add(layout);
+        layout.Controls.Add(new Label{Text="Choose a destination display and a window. After moving it, select another window here or move the same window again.",Dock=DockStyle.Fill},0,0);
+        var destination=new ComboBox{Dock=DockStyle.Fill,DropDownStyle=ComboBoxStyle.DropDownList,BackColor=Theme.Raised,ForeColor=Theme.Text};layout.Controls.Add(destination,0,1);
+        var list=new ListBox{Dock=DockStyle.Fill,IntegralHeight=false,HorizontalScrollbar=true,BackColor=Theme.Raised,ForeColor=Theme.Text,BorderStyle=BorderStyle.None};layout.Controls.Add(list,0,2);
+        var feedback=new Label{Dock=DockStyle.Fill,Padding=new Padding(0,8,0,0),ForeColor=Theme.Muted};layout.Controls.Add(feedback,0,3);
+        var buttons=new FlowLayoutPanel{Dock=DockStyle.Fill,WrapContents=false};layout.Controls.Add(buttons,0,4);
+        var move=Btn("Move selected window",delegate{});((ModernButton)move).Primary=true;
+        var identities=new Dictionary<IntPtr,uint>();
+        Action updateEnabled=delegate{move.Enabled=list.SelectedItem!=null&&destination.SelectedItem!=null;};
+        Action reload=delegate{
+            var selected=list.SelectedItem as WindowItem;var chosen=destination.SelectedItem as DisplayItem;string device=chosen==null?settings.Monitor:chosen.Screen.DeviceName;
+            destination.Items.Clear();foreach(var screen in Screen.AllScreens)destination.Items.Add(new DisplayItem{Screen=screen});for(int i=0;i<destination.Items.Count;i++)if(((DisplayItem)destination.Items[i]).Screen.DeviceName==device)destination.SelectedIndex=i;
+            list.BeginUpdate();list.Items.Clear();identities.Clear();foreach(var window in Native.Windows()){uint pid;Native.GetWindowThreadProcessId(window.Handle,out pid);if(pid==(uint)Process.GetCurrentProcess().Id)continue;list.Items.Add(window);identities[window.Handle]=pid;if(selected!=null&&selected.Handle==window.Handle)list.SelectedItem=window;}list.EndUpdate();updateEnabled();
+            feedback.Text=list.Items.Count==0?"No visible windows found. Open the game and click Refresh windows.":"Select a window below the display list. This picker stays open after each move.";
+        };
+        move.Click+=delegate{
+            var window=list.SelectedItem as WindowItem;var choice=destination.SelectedItem as DisplayItem;if(window==null||choice==null)return;
+            var screen=Screen.AllScreens.FirstOrDefault(x=>x.DeviceName==choice.Screen.DeviceName);if(screen==null){reload();feedback.Text="That display disconnected. Choose a connected display.";return;}
+            uint pid,original;Native.GetWindowThreadProcessId(window.Handle,out pid);if(!Native.IsWindow(window.Handle)||!identities.TryGetValue(window.Handle,out original)||pid!=original){reload();feedback.Text="That window closed or was replaced. Select its new window and try again.";return;}
+            bool sent=Native.Move(window.Handle,screen,settings.Borderless);feedback.Text=sent?"Move requested. Select another window, move this one again, or click Done.":"Windows could not move that window. You can select another or refresh the list.";Say(feedback.Text);list.Focus();
+        };
+        buttons.Controls.Add(move);buttons.Controls.Add(Btn("Refresh windows",delegate{reload();}));var done=Btn("Done",delegate{form.Close();});buttons.Controls.Add(done);form.CancelButton=done;
+        list.SelectedIndexChanged+=delegate{updateEnabled();};destination.SelectedIndexChanged+=delegate{updateEnabled();};reload();return form;
+    }
     void Restore(){var saved=states.ToArray();enabled.Checked=false;int countRestored=0;foreach(var pair in saved){if(pair.Value.Attempts==0||Exclusions.Contains(settings.ExcludedGames,pair.Value.GameId,pair.Value.GameFolder,pair.Value.GameName))continue;uint pid;Native.GetWindowThreadProcessId(pair.Key,out pid);if(pid!=pair.Value.Pid||!Native.IsWindow(pair.Key))continue;try{using(var process=Process.GetProcessById((int)pid))if(process.StartTime.ToUniversalTime()!=pair.Value.Born)continue;}catch{continue;}Native.Style(pair.Key,pair.Value.Style);var r=pair.Value.Rect;if(Native.SetWindowPos(pair.Key,IntPtr.Zero,r.Left,r.Top,r.Right-r.Left,r.Bottom-r.Top,0x0004|0x0010|0x0020|0x4000))countRestored++;}states.Clear();Say("Monitoring paused. Restore requested for "+countRestored+" window(s).");}
 }

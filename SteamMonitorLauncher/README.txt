@@ -1,3 +1,10 @@
+VERSION 1.13.2 - DISPLAY SELECTION AND REPEAT WINDOW MOVES
+Click a numbered display in the main preview to select it.
+Tools > Display controls > Move a running window stays open after a move.
+Choose another window or destination, Refresh windows to see new windows,
+and click Done when finished. This manual destination does not change the
+automatic target monitor; active automatic rules can still move tracked games.
+
 VERSION 1.13.1
 Extract the complete ZIP. Run SteamMonitorLauncher.exe or Launch Steam Monitor.bat
 for installation using the included prebuilt EXE. No compiler download needed.

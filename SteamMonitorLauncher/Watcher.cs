@@ -10,7 +10,7 @@ public class Candidate {
     public IntPtr Handle; public uint Pid; public DateTime Born; public string Title, Game, GameId, GameFolder;
 }
 public class WatchResult {
-    public List<Candidate> Windows=new List<Candidate>();
+    public List<Candidate> Windows=new List<Candidate>();public List<string> ActiveGameIds=new List<string>();
     public int Revision;public List<Game> Games; public string Steam, Message;
 }
 // Owned only by the one background worker; no UI or settings objects are shared.
@@ -86,6 +86,7 @@ public class Watcher {
             Diagnostics.Write("Scan: "+alive.Count+" readable processes; "+result.Games.Count+" titles; "+result.Windows.Count+" game windows.");
             foreach(var window in result.Windows)Diagnostics.Write("Detected: "+window.Game+" | PID "+window.Pid+" | HWND "+window.Handle+" | "+window.Title);
         }
+        result.ActiveGameIds=alive.Values.Where(p=>p.Game!=null&&!String.IsNullOrEmpty(p.Game.Id)).Select(p=>p.Game.Id).Distinct().ToList();
         return result;
     }
 }

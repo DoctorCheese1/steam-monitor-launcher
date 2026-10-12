@@ -1,3 +1,20 @@
+VERSION 1.14.0 - MANUAL WINDOW TOOLS AND SETUP
+- Tools > Display controls > Move a running window: search window titles,
+  Pick window by click, Move, Remember monitor, Undo, and Resume auto-move.
+- Picking consumes the selection click; Escape cancels and 30 seconds times out.
+- Manual moves hold automatic movement for that window until it closes, you
+  choose Resume auto-move, or Remember monitor saves a game profile.
+- Undo restores the last manually moved window's position, size and frame style.
+  It checks window/process identity first and never reopens a closed window.
+- Remember monitor preserves game identity; unknown EXEs can be added as custom
+  games after confirmation. Existing exclusions and session pauses still apply.
+- Game settings > Pause auto-move pauses that game's currently detected session.
+  It clears when no readable game processes remain, or when you resume it.
+- Monitor presets save global target, borderless and fallback settings. Per-game
+  overrides remain active. Apply presets from the main Monitor presets button.
+- Fresh installations get a choose-display / test / startup walkthrough.
+  Reopen it from Tools > Display controls > Run setup walkthrough.
+
 VERSION 1.13.2 - DISPLAY SELECTION AND REPEAT WINDOW MOVES
 Click a numbered display in the main preview to select it.
 Tools > Display controls > Move a running window stays open after a move.

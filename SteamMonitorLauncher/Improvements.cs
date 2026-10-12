@@ -29,6 +29,8 @@ public partial class Launcher {
     Dictionary<string,DateTime> launchWaiting=new Dictionary<string,DateTime>();
     string GameStatus(Game game){
         if(IsExcluded(game))return "Excluded";
+        if(SessionPaused(game.Id))return "Paused for this game session";
+        if(manualHolds.Values.Any(h=>h.GameId==game.Id&&h.Alive()))return "Manual placement - auto-move held";
         if(!settings.Enabled)return "Auto-move paused";
         var running=lastCandidates.Where(c=>c.GameId==game.Id).ToList();
         if(running.Count>0){var messages=running.Select(c=>states.ContainsKey(c.Handle)?states[c.Handle].Status:"Detected").Distinct();return String.Join("; ",messages);}
@@ -40,6 +42,9 @@ public partial class Launcher {
     }
     void TestDisplay(){
         var target=ResolveTarget(settings.MonitorKey,settings.Monitor);if(target==null){Say("Choose a connected target display first.");return;}
+        ShowDisplayTest(target);
+    }
+    void ShowDisplayTest(DisplayIdentity target){
         using(var form=new Form{Text="Selected display test",StartPosition=FormStartPosition.Manual,Size=new Size(520,240),BackColor=Theme.Card,ForeColor=Theme.Text,Font=Font,Icon=appIcon,TopMost=true}){
             var a=target.Screen.WorkingArea;form.Location=new Point(a.X+(a.Width-form.Width)/2,a.Y+(a.Height-form.Height)/2);
             var text=new Label{Dock=DockStyle.Fill,Padding=new Padding(20),TextAlign=ContentAlignment.MiddleCenter,Text="Your games will move to this display.\n\n"+target.Screen.DeviceName+"\n"+a.Width+" x "+a.Height+"\n\nClose this test to return to the launcher."};form.Controls.Add(text);
@@ -49,6 +54,7 @@ public partial class Launcher {
     void OpenGameSettings(Game game){if(game==null)return;using(var form=ToolForm("Game settings - "+game.Name)){
         var body=ToolStack(form);body.Controls.Add(new Label{Text=game.Name,Font=new Font(Font,FontStyle.Bold),Width=610,Height=32});
         body.Controls.Add(new Label{Text=GameStatus(game)+"\n"+game.Folder,Width=610,Height=72,AutoEllipsis=true});
+        ToolButton(body,SessionPaused(game.Id)?"Resume automatic movement":"Pause auto-move until this game closes",delegate{ToggleSessionPause(game);form.Close();});
         ToolButton(body,"Monitor and window size",delegate{EditProfile(game);});
         ToolButton(body,"Launch method and movement timing",delegate{EditGameOptions(game);});
         ToolButton(body,"Find game EXE automatically",delegate{if(FindExecutable(game,false))form.Close();});

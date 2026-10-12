@@ -33,7 +33,7 @@ public class Watcher {
         DateTime now=DateTime.UtcNow;string signature=String.Join("|",custom.Select(g=>g.Id+g.Executable+g.Name+g.Arguments+g.Folder+g.MatchFolder));if(signature!=customSignature){cache.Clear();family.Clear();customSignature=signature;}
         bool rescan=refresh||(now-lastScan).TotalSeconds>=60;
         if(rescan){library.Steam=steam;library.Scan();lastScan=now;cache.Clear();}
-        var catalog=library.games.Concat(custom).Concat(discovered.Values.Where(d=>!library.games.Concat(custom).Any(g=>String.Equals(g.Executable,d.Executable,StringComparison.OrdinalIgnoreCase)||(g.MatchFolder&&SteamUnlockedLibrary.Within(d.Executable,g.Folder))))).OrderBy(g=>g.Name,StringComparer.CurrentCultureIgnoreCase).ToList();
+        var catalog=library.games.Where(g=>!custom.Any(c=>c.Id==g.Id)).Concat(custom).Concat(discovered.Values.Where(d=>!library.games.Where(g=>!custom.Any(c=>c.Id==g.Id)).Concat(custom).Any(g=>String.Equals(g.Executable,d.Executable,StringComparison.OrdinalIgnoreCase)||(g.MatchFolder&&SteamUnlockedLibrary.Within(d.Executable,g.Folder))))).OrderBy(g=>g.Name,StringComparer.CurrentCultureIgnoreCase).ToList();
         // Drop earlier session-only entries once the real library owns their folder.
         foreach(string path in discovered.Keys.ToArray())if(library.games.Any(g=>g.Source=="SteamUnlocked"&&SteamUnlockedLibrary.Within(path,g.Folder)))discovered.Remove(path);
         var result=new WatchResult{Games=catalog,Steam=library.Steam,Message=library.Message};
@@ -61,7 +61,7 @@ public class Watcher {
             else if(family.TryGetValue(pid,out old)){record.Game=old.Game;record.LauncherSource=old.LauncherSource;family[pid]=record;}
         }catch{}}
         foreach(var pid in cache.Keys.ToArray())if(!alive.ContainsKey(pid))cache.Remove(pid);
-        foreach(var pid in family.Keys.ToArray())if(!alive.ContainsKey(pid)&&(now-family[pid].Seen).TotalSeconds>60)family.Remove(pid);
+        foreach(var pid in family.Keys.ToArray())if(!alive.ContainsKey(pid)&&(now-family[pid].Seen).TotalSeconds>300)family.Remove(pid);
         bool changed;
         do{changed=false;foreach(var record in alive.Values){
             if(record.Game!=null||record.LauncherSource.Length>0)continue;uint parent;ProcessRecord ancestor,current;

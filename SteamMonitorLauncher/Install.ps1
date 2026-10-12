@@ -1,4 +1,4 @@
-param([switch]$ValidateOnly,[switch]$Portable,[string]$PortableDirectory="")
+param([switch]$ValidateOnly,[switch]$ForceCompile,[switch]$NoLaunch,[switch]$Portable,[string]$PortableDirectory="")
 $ErrorActionPreference = 'Stop'
 $root = $PSScriptRoot
 $dataDir = Join-Path $env:LOCALAPPDATA 'SteamMonitorLauncher'
@@ -10,20 +10,19 @@ $target = Join-Path $appDir 'SteamMonitorLauncher.exe'
 New-Item -ItemType Directory -Path $logDir -Force | Out-Null
 $log = Join-Path $logDir 'install.log'
 $stage = $null
+$replacementStarted = $false
+$buildBackedUp = $false
 $transcribing = $false
 try {
     Start-Transcript -Path $log -Force | Out-Null
     $transcribing = $true
-    Write-Host 'Steam Monitor Launcher 1.12.3 - Install / Repair'
-    $required = @('Launcher.cs','Native.cs','SteamLibrary.cs','OtherLibraries.cs','SteamUnlockedLibrary.cs','Updater.cs','LibraryPlus.cs','Watcher.cs','Interface.cs','Diagnostics.cs','Exclusions.cs','Features.cs','Displays.cs','app.manifest','Launcher.ico','LauncherPaused.ico','Assets\Launcher.png','Uninstall.ps1','Update.ps1','version.txt')
+    Write-Host 'Steam Monitor Launcher 1.13.0 - Install / Repair'
+    $required = @('Launcher.cs','Native.cs','SteamLibrary.cs','OtherLibraries.cs','SteamUnlockedLibrary.cs','Updater.cs','LibraryPlus.cs','Improvements.cs','Watcher.cs','Interface.cs','Diagnostics.cs','Exclusions.cs','Features.cs','Displays.cs','app.manifest','Launcher.ico','LauncherPaused.ico','Assets\Launcher.png','Uninstall.ps1','Recovery.ps1','Update.ps1','version.txt')
     foreach ($name in $required) {
         if (-not (Test-Path -LiteralPath (Join-Path $root $name) -PathType Leaf)) {
             throw "Missing $name. Extract the ENTIRE ZIP into a new folder before running setup."
         }
     }
-    $compiler = Join-Path $env:WINDIR 'Microsoft.NET\Framework64\v4.0.30319\csc.exe'
-    if (-not (Test-Path -LiteralPath $compiler)) { $compiler = Join-Path $env:WINDIR 'Microsoft.NET\Framework\v4.0.30319\csc.exe' }
-    if (-not (Test-Path -LiteralPath $compiler)) { throw '.NET Framework 4.x C# compiler is missing. See install.log for details.' }
     New-Item -ItemType Directory -Path $appDir -Force | Out-Null
     $stage = Join-Path $appDir ('build-' + [guid]::NewGuid().ToString('N'))
     New-Item -ItemType Directory -Path $stage | Out-Null
@@ -36,19 +35,34 @@ try {
         ('/resource:' + (Join-Path $root 'LauncherPaused.ico') + ',LauncherPaused.ico'),
         ('/resource:' + (Join-Path $root 'Assets\Launcher.png') + ',LauncherHeader.png'),
         '/reference:System.Windows.Forms.dll','/reference:System.Drawing.dll','/reference:System.Xml.dll','/reference:System.Core.dll','/reference:System.Web.Extensions.dll')
-    foreach ($name in @('Launcher.cs','Native.cs','SteamLibrary.cs','OtherLibraries.cs','SteamUnlockedLibrary.cs','Updater.cs','LibraryPlus.cs','Watcher.cs','Interface.cs','Diagnostics.cs','Exclusions.cs','Features.cs','Displays.cs')) { $arguments += Join-Path $root $name }
+    foreach ($name in @('Launcher.cs','Native.cs','SteamLibrary.cs','OtherLibraries.cs','SteamUnlockedLibrary.cs','Updater.cs','LibraryPlus.cs','Improvements.cs','Watcher.cs','Interface.cs','Diagnostics.cs','Exclusions.cs','Features.cs','Displays.cs')) { $arguments += Join-Path $root $name }
+    $prebuilt = Join-Path $root 'SteamMonitorLauncher.exe'
+    if (-not $ValidateOnly -and -not $ForceCompile -and (Test-Path -LiteralPath $prebuilt)) {
+        Write-Host 'Installing the included prebuilt executable...'
+        Copy-Item -LiteralPath $prebuilt -Destination $candidate
+    } else {
+    $compiler = Join-Path $env:WINDIR 'Microsoft.NET\Framework64\v4.0.30319\csc.exe'
+    if (-not (Test-Path -LiteralPath $compiler)) { $compiler = Join-Path $env:WINDIR 'Microsoft.NET\Framework\v4.0.30319\csc.exe' }
+    if (-not (Test-Path -LiteralPath $compiler)) { throw '.NET Framework 4.x C# compiler is missing. See install.log for details.' }
     Write-Host 'Building a fresh executable (including same-version repairs)...'
     $output = & $compiler @arguments 2>&1
     $compileExit = $LASTEXITCODE
     $output | ForEach-Object { Write-Host $_ }
     if ($compileExit -ne 0 -or -not (Test-Path -LiteralPath $candidate)) { throw "Compilation failed (exit $compileExit). The previous installation has not been replaced." }
+    }
     [Reflection.AssemblyName]::GetAssemblyName($candidate) | Out-Null
+    $binaryVersion = [version]([Diagnostics.FileVersionInfo]::GetVersionInfo($candidate).FileVersion)
+    if ($binaryVersion.ToString(3) -ne (Get-Content -LiteralPath (Join-Path $root 'version.txt') -Raw).Trim()) { throw 'The executable version does not match this package. Extract the complete ZIP into a new folder.' }
     Write-Host 'Checking startup, icon loading and settings-window construction...'
     $check = Start-Process -FilePath $candidate -ArgumentList '--self-test' -PassThru
     if (-not $check.WaitForExit(30000)) { $check.Kill(); throw 'The new executable did not finish its startup check. Existing files were not replaced.' }
     if ($ValidateOnly -and (Test-Path (Join-Path $stage 'logs'))) { Copy-Item -Path (Join-Path $stage 'logs\*') -Destination $logDir -Force }
     if ($check.ExitCode -ne 0) { if ($ValidateOnly) { Get-Content -LiteralPath (Join-Path $logDir 'startup-check.log') -ErrorAction SilentlyContinue | Write-Host }; throw 'Startup check failed. See startup-check.log in the logs folder. Existing files were not replaced.' }
-    if ($ValidateOnly) { Write-Host 'Windows build and startup checks passed.'; exit 0 }
+    if ($ValidateOnly) { Copy-Item -LiteralPath $candidate -Destination (Join-Path $dataDir 'SteamMonitorLauncher.exe') -Force; Write-Host 'Windows build and startup checks passed.'; exit 0 }
+    . (Join-Path $root 'Recovery.ps1')
+    Backup-LauncherBuild $dataDir $appDir
+    $buildBackedUp = Test-Path (Join-Path $dataDir 'previous-build\SteamMonitorLauncher.exe')
+    $replacementStarted = $true
     # Stop only this application's installed/extracted executables after a successful build check.
     $prefix = [IO.Path]::GetFullPath($appDir).TrimEnd('\') + '\'
     $sourceExe = [IO.Path]::GetFullPath((Join-Path $root 'SteamMonitorLauncher.exe'))
@@ -86,19 +100,21 @@ try {
         $uninstallKey = 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Uninstall\SteamMonitorLauncher'
         New-Item -Path $uninstallKey -Force | Out-Null
         New-ItemProperty -Path $uninstallKey -Name DisplayName -Value 'Steam Monitor Launcher' -PropertyType String -Force | Out-Null
-        New-ItemProperty -Path $uninstallKey -Name DisplayVersion -Value '1.12.3' -PropertyType String -Force | Out-Null
+        New-ItemProperty -Path $uninstallKey -Name DisplayVersion -Value '1.13.0' -PropertyType String -Force | Out-Null
         New-ItemProperty -Path $uninstallKey -Name InstallLocation -Value $appDir -PropertyType String -Force | Out-Null
         $uninstallCommand = 'powershell.exe -NoProfile -ExecutionPolicy Bypass -File "' + (Join-Path $dataDir 'Uninstall.ps1') + '"'
         New-ItemProperty -Path $uninstallKey -Name UninstallString -Value $uninstallCommand -PropertyType String -Force | Out-Null
     } catch { Write-Warning ('App installed, but shortcut/uninstall registration was incomplete: ' + $_.Exception.Message) } }
+    Copy-Item -LiteralPath (Join-Path $root 'Recovery.ps1') -Destination (Join-Path $dataDir 'Recovery.ps1') -Force
     Copy-Item -LiteralPath (Join-Path $root 'Update.ps1') -Destination (Join-Path $dataDir 'Update.ps1') -Force
     Copy-Item -LiteralPath (Join-Path $root 'version.txt') -Destination (Join-Path $dataDir 'version.txt') -Force
     if ($Portable) { Set-Content -LiteralPath (Join-Path $dataDir 'portable.flag') -Value 'portable' -Encoding ASCII }
     Write-Host ('Installed: ' + $target)
     Write-Host 'Saved monitor preferences were retained.'
-    Start-Process -FilePath $target
+    if (-not $NoLaunch) { Start-Process -FilePath $target }
 } catch {
     Write-Host ('ERROR: ' + $_.Exception.Message)
+    if ($replacementStarted -and $buildBackedUp) { try { Restore-LauncherBuild $dataDir $appDir; Write-Host 'Previous build restored.' } catch { Write-Host ('Automatic recovery failed: ' + $_.Exception.Message) } }
     if ($transcribing) { Stop-Transcript | Out-Null; $transcribing=$false }
     if (-not $ValidateOnly) { Start-Process notepad.exe -ArgumentList ('"' + $log + '"') }
     exit 1

@@ -1,16 +1,16 @@
-STEAM MONITOR LAUNCHER 1.12.3
+STEAM MONITOR LAUNCHER 1.13.0
 
 INSTALL OR UPDATE
 Extract this full ZIP into a fresh folder and run Launch Steam Monitor.bat.
-If v1.10.0 or later is installed, use Tools > Launcher updater and choose this
+If v1.10.0 or later is installed, use Updates and choose this
 ZIP directly. Existing preferences remain in place. Updater also accepts the
 same version for repair. It rejects downgrades, checks the package, saves a
-settings backup, compiles/tests the new app, then replaces the old EXE.
+settings backup, tests the included EXE (or compiles source packages), then replaces the old EXE.
 Online update checks are available after configuring a release feed URL.
 See LIVE_UPDATES.txt for setup and publishing instructions.
 
 GAME LIBRARY / CONTROLLER VIEW
-Open Library / Game settings / Tools, then the library/controller view.
+Open Library on the main screen.
 Also accessible from the tray menu. Select a store, favorites, or recently
 played filter. Play launches the highlighted game. Favorite toggles its saved
 favorite status. Recently played includes launches here and detected sessions
@@ -32,7 +32,7 @@ For shortcuts that point to a store client or URL, add the actual game EXE
 manually and select the store shortcut as its launch method instead.
 
 MOVEMENT AND LAUNCH OPTIONS
-Select a game in the MAIN list before opening Tools to edit its options.
+Select a game in the MAIN list, then open Game settings.
 Startup delay: 0-600 seconds, measured per newly detected window.
 Stop after placement: stops automatic repositioning of that window once it is
 on target or its requested placement has been verified. Replacement windows
@@ -93,3 +93,25 @@ Observable children of steamunlocked-launcher.exe remain a fallback for games
 absent from the database. The launcher window is never moved. These fallback
 entries last for the watcher session and use executable-path identities.
 No game downloading, login automation or game-file modification is involved.
+
+VERSION 1.13.0 - CLEARER NAVIGATION AND RECOVERY
+Main navigation: Library | Game settings | Tools | Updates.
+Game rows show readiness, unavailable folders, waiting and movement results.
+Game settings: Find game EXE searches inside the game folder, filters common
+helper programs, and asks you to confirm before saving. No scanned file runs.
+Locate moved game keeps the same ID, profiles, favorites and exclusions while
+changing both launch and detection paths. Choose only that game's folder.
+Tools groups Library management, Display controls, Diagnostics and Backup.
+Test display opens a sample window on the resolved target/fallback monitor.
+Replacement startup windows receive their own delay and placement tracking.
+New windows wait for stable geometry (up to 20 seconds); process ancestry is
+retained for five minutes to follow startup-menu handoffs.
+Duplicate cleanup reviews custom entries sharing the same exact EXE. Conflicting
+profiles/launch options are kept separate rather than discarded.
+Updates > Offline update installs a trusted ZIP without contacting GitHub.
+The full release contains a prebuilt EXE. Launch Steam Monitor.bat installs it;
+compiling is only needed for source-only packages or -ForceCompile repairs.
+The installer validates the EXE before replacing the app and keeps a previous
+build. Installation failures after replacement attempt automatic recovery.
+Updates > Restore previous app version validates/restores that backup while
+keeping current settings. It does not reverse game-file changes.

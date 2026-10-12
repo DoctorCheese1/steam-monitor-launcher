@@ -1,8 +1,14 @@
-STEAM MONITOR LAUNCHER 1.12.3 - PROFILES AND TOOLS
+VERSION 1.13.0
+Extract the complete ZIP. Run SteamMonitorLauncher.exe or Launch Steam Monitor.bat
+for installation using the included prebuilt EXE. No compiler download needed.
+Navigation: Library / Game settings / Tools / Updates are separate buttons.
+See FEATURE_GUIDE.txt for EXE search, file repair, duplicate review and recovery.
+
+STEAM MONITOR LAUNCHER 1.13.0 - PROFILES AND TOOLS
 
 INSTALL / UPDATE
 Extract the whole ZIP into a new folder and run Launch Steam Monitor.bat.
-The repair installer builds a fresh EXE, runs local startup checks, replaces
+The installer uses the included EXE, runs local startup checks, replaces
 the installed launcher and creates Desktop and Start menu shortcuts. Existing
 settings and exclusions are kept. Older per-game profiles remain disabled until
 you enable their override so the previous global behavior does not change.
@@ -15,7 +21,7 @@ tray. Right-click the tray icon to pause or exit. Windows startup remains an
 option in the main window.
 
 NEW TOOLS
-Select a game, then click Game settings / Tools.
+Select a game, then click Game settings.
 
 1. PER-GAME SETTINGS
 Open Per-game monitor, borderless and saved layout. Enable Override, choose

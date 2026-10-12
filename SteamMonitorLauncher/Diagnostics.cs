@@ -2,11 +2,13 @@ using System;
 using System.Drawing;
 using System.IO;
 using System.Reflection;
+using System.Linq;
 using System.Windows.Forms;
 public static class Diagnostics {
     static readonly object Gate=new object();
     public static readonly string Folder=Path.Combine(AppPaths.Data,"logs");
     public static void Write(string text){try{lock(Gate){Directory.CreateDirectory(Folder);string file=Path.Combine(Folder,"watcher.log");if(File.Exists(file)&&new FileInfo(file).Length>1048576)File.Move(file,Path.Combine(Folder,"watcher-"+DateTime.UtcNow.ToString("yyyyMMdd-HHmmssfff")+".log"));File.AppendAllText(file,DateTime.Now.ToString("s")+" "+text+Environment.NewLine);}}catch{}}
+    static System.Collections.Generic.IEnumerable<Control> Descendants(Control parent){foreach(Control child in parent.Controls){yield return child;foreach(var item in Descendants(child))yield return item;}}
     static int MarshalSize(){return System.Runtime.InteropServices.Marshal.SizeOf(typeof(Gamepad.State));}
     public static int StartupCheck(){try{
         foreach(string name in new[]{"Launcher.ico","LauncherPaused.ico"})foreach(int size in new[]{16,32,48,256}){
@@ -55,7 +57,13 @@ public static class Diagnostics {
         if(!SteamUnlockedLibrary.Within(@"D:\Saved Games\Downloads\Example\Binaries\game.exe",imported[0].Folder)||SteamUnlockedLibrary.Within(@"D:\Saved Games\Downloads\ExampleOther\game.exe",imported[0].Folder))throw new InvalidDataException("Library folder boundary failed");
         var bounds=Launcher.SavedBounds(legacy.Profiles[0],new Rectangle(-1920,0,1920,1080));
         if(bounds!=new Rectangle(-1920,480,1920,600))throw new InvalidDataException("Saved layout bounds clamp failed");
-        using(var form=new Launcher(false,true)){form.CreateControl();form.PerformLayout();}
+        if(ExecutableDiscovery.IsCandidate(@"C:\Games\setup.exe")||ExecutableDiscovery.IsCandidate(@"C:\Games\UnityCrashHandler64.exe")||!ExecutableDiscovery.IsCandidate(@"C:\Games\Example-Win64-Shipping.exe"))throw new InvalidDataException("Executable helper filtering failed");
+        string fixture=Path.Combine(Path.GetTempPath(),"launcher-fixture-"+Guid.NewGuid().ToString("N"));Directory.CreateDirectory(Path.Combine(fixture,"Binaries"));try{File.WriteAllText(Path.Combine(fixture,"setup.exe"),"");File.WriteAllText(Path.Combine(fixture,"Binaries","Game.exe"),"");if(ExecutableDiscovery.Scan(fixture,()=>false).Count!=1||ExecutableDiscovery.Scan(fixture,()=>true).Count!=0)throw new InvalidDataException("Bounded executable discovery failed");}finally{Directory.Delete(fixture,true);}
+        legacy.GameOptions[0].DetectionPath=@"D:\Moved\game.exe";legacy.GameOptions[0].DetectionFolder=@"D:\Moved";legacy.GameOptions[0].GameName="Moved game";
+        using(var writer=new StringWriter()){serializer.Serialize(writer,legacy);saved=writer.ToString();}using(var reader=new StringReader(saved))legacy=(Settings)serializer.Deserialize(reader);
+        if(legacy.GameOptions[0].DetectionFolder!=@"D:\Moved"||!legacy.GameOptions[0].Favorite)throw new InvalidDataException("Game repair settings roundtrip failed");
+        using(var form=new Launcher(false,true)){form.CreateControl();form.PerformLayout();Directory.CreateDirectory(Folder);using(var preview=new Bitmap(form.Width,form.Height)){form.DrawToBitmap(preview,new Rectangle(Point.Empty,form.Size));preview.Save(Path.Combine(Folder,"interface-preview.png"));}foreach(string title in new[]{"Library","Game settings","Tools","Updates"})if(!Descendants(form).OfType<Button>().Any(b=>b.Text==title&&b.Width>=70&&b.Height>=25))throw new InvalidDataException("Navigation layout missing or clipped: "+title);}
+
         Directory.CreateDirectory(Folder);File.WriteAllText(Path.Combine(Folder,"startup-check.log"),"PASS: assembly, both embedded icons at 16/32/48/256px, standalone header PNG, exclusion persistence/identity, profile/custom-game serialization, saved-layout bounds, and settings form construction/layout. SteamUnlocked JSON parsing, download filtering, path boundaries and deduplication passed. Game positioning not tested.");return 0;
     }catch(Exception ex){try{Directory.CreateDirectory(Folder);File.WriteAllText(Path.Combine(Folder,"startup-check.log"),ex.ToString());}catch{}return 1;}}
 }

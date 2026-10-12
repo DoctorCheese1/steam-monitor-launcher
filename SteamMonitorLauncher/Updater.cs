@@ -17,7 +17,7 @@ public class OnlineRelease {
     public string FeedUrl;
 }
 public static class ReleaseClient {
-    public const string Current="1.12.3";
+    public const string Current="1.13.0";
     public const string DefaultFeed="https://github.com/DoctorCheese1/steam-monitor-launcher/releases/latest/download/latest.json";
     public static Uri Https(string url){Uri uri;if(!Uri.TryCreate(url,UriKind.Absolute,out uri)||uri.Scheme!=Uri.UriSchemeHttps||!String.IsNullOrEmpty(uri.UserInfo))throw new InvalidDataException("Enter a public HTTPS release URL without embedded credentials.");return uri;}
     static HttpWebResponse Open(string url){
@@ -70,7 +70,7 @@ public partial class Launcher {
         };checker.RunWorkerAsync();
     }
     bool StartZipUpdater(string package,string expectedVersion=""){string script=Path.Combine(Data,"Update.ps1");if(!File.Exists(script)){MessageBox.Show(this,"Run Launch Steam Monitor.bat once to install the updater.");return false;}try{string shell=Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.System),@"WindowsPowerShell\v1.0\powershell.exe");Process.Start(new ProcessStartInfo(shell,"-NoLogo -NoProfile -ExecutionPolicy Bypass -File \""+script+"\" -PackagePath \""+package+"\""+(expectedVersion.Length==0?"":" -ExpectedVersion "+expectedVersion)){UseShellExecute=true});Say("Updater opened. It will check the new build before replacing the app.");return true;}catch(Exception ex){MessageBox.Show(this,ex.Message);return false;}}
-    void OpenUpdater(){using(var form=ToolForm("Live launcher updater")){
+    void OpenUpdater(){using(var form=ToolForm("Updates and recovery")){
         var body=ToolStack(form);body.Controls.Add(new Label{Text="Installed version: "+ReleaseClient.Current,Width=620,Height=32});
         body.Controls.Add(new Label{Text="Release feed URL (HTTPS latest.json)",Width=620,Height=24});var feed=new TextBox{Width=620,Text=settings.UpdateFeed??""};body.Controls.Add(feed);
         var auto=new CheckBox{Text="Check on startup and every 6 hours; notify when an update is ready",AutoSize=true,Checked=settings.AutoCheckUpdates};body.Controls.Add(auto);
@@ -80,7 +80,8 @@ public partial class Launcher {
         ToolButton(body,"Save update settings",delegate{try{save();info.Text="Update settings saved.";}catch(Exception ex){info.Text=ex.Message;}});
         ToolButton(body,"Check now",delegate{try{save();download.Enabled=false;selected=null;info.Text="Checking the live release feed...";CheckRelease(delegate(string message,OnlineRelease item){if(form.IsDisposed)return;selected=item;download.Enabled=item!=null;info.Text=message+(item==null?"":"\n"+item.Notes);});}catch(Exception ex){info.Text=ex.Message;}});
         download.Click+=delegate{try{save();if(selected==null)return;DownloadRelease(selected);}catch(Exception ex){info.Text=ex.Message;}};body.Controls.Add(download);
-        ToolButton(body,"Install a downloaded ZIP...",delegate{using(var picker=new OpenFileDialog{Title="Select launcher update ZIP",Filter="Launcher update|*.zip"})if(picker.ShowDialog(form)==DialogResult.OK&&StartZipUpdater(picker.FileName))form.Close();});
+        ToolButton(body,"Offline update - choose a downloaded ZIP",delegate{using(var picker=new OpenFileDialog{Title="Select launcher update ZIP",Filter="Launcher update|*.zip"})if(picker.ShowDialog(form)==DialogResult.OK&&StartZipUpdater(picker.FileName))form.Close();});
+        ToolButton(body,"Restore previous app version",delegate{string recovery=Path.Combine(Data,"Recovery.ps1");if(!File.Exists(recovery)){MessageBox.Show(form,"Install this version using the included setup first to enable recovery.");return;}if(!File.Exists(Path.Combine(Data,@"previous-build\SteamMonitorLauncher.exe"))){MessageBox.Show(form,"No previous build is available. One is saved when an existing installation is updated.");return;}Process.Start(new ProcessStartInfo("powershell.exe","-NoLogo -NoProfile -ExecutionPolicy Bypass -File \""+recovery+"\" -Restore"){UseShellExecute=true});});
         ToolButton(body,"Open settings backups",delegate{string path=Path.Combine(Data,"backups");Directory.CreateDirectory(path);Process.Start("explorer.exe",path);});
         body.Controls.Add(new Label{Text="Downloads are verified against the release SHA-256 hash. Installation backs up settings and checks the new build. Automatic checks only notify; they do not interrupt a game to install.",Width=620,Height=90});form.ShowDialog(this);
     }}

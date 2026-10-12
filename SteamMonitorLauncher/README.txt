@@ -1,10 +1,10 @@
-VERSION 1.13.0
+VERSION 1.13.1
 Extract the complete ZIP. Run SteamMonitorLauncher.exe or Launch Steam Monitor.bat
 for installation using the included prebuilt EXE. No compiler download needed.
 Navigation: Library / Game settings / Tools / Updates are separate buttons.
 See FEATURE_GUIDE.txt for EXE search, file repair, duplicate review and recovery.
 
-STEAM MONITOR LAUNCHER 1.13.0 - PROFILES AND TOOLS
+STEAM MONITOR LAUNCHER 1.13.1 - PROFILES AND TOOLS
 
 INSTALL / UPDATE
 Extract the whole ZIP into a new folder and run Launch Steam Monitor.bat.

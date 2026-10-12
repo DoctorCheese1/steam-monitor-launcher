@@ -1,4 +1,4 @@
-STEAM MONITOR LAUNCHER 1.13.0
+STEAM MONITOR LAUNCHER 1.13.1
 
 INSTALL OR UPDATE
 Extract this full ZIP into a fresh folder and run Launch Steam Monitor.bat.
@@ -94,7 +94,7 @@ absent from the database. The launcher window is never moved. These fallback
 entries last for the watcher session and use executable-path identities.
 No game downloading, login automation or game-file modification is involved.
 
-VERSION 1.13.0 - CLEARER NAVIGATION AND RECOVERY
+VERSION 1.13.1 - CLEARER NAVIGATION AND RECOVERY
 Main navigation: Library | Game settings | Tools | Updates.
 Game rows show readiness, unavailable folders, waiting and movement results.
 Game settings: Find game EXE searches inside the game folder, filters common

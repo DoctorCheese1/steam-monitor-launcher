@@ -142,7 +142,7 @@ public partial class Launcher:Form {
             if(display==null){SetGameStatus(window,state,"Waiting for selected monitor");state.Pending=false;state.First=DateTime.UtcNow;state.Attempts=0;continue;}
             var movement=Options(window.GameId);
             Native.RECT observed;if(Native.GetWindowRect(window.Handle,out observed)){
-                if(!RectClose(observed,state.LastObserved)){state.LastObserved=observed;state.StableSince=DateTime.UtcNow;}
+                if(!RectClose(observed,Rectangle.FromLTRB(state.LastObserved.Left,state.LastObserved.Top,state.LastObserved.Right,state.LastObserved.Bottom))){state.LastObserved=observed;state.StableSince=DateTime.UtcNow;}
                 if(!state.Placed&&(DateTime.UtcNow-state.Observed).TotalSeconds<20&&(DateTime.UtcNow-state.StableSince).TotalSeconds<2){SetGameStatus(window,state,"Waiting for startup window to settle");continue;}
             }
             if(movement.StopAfterPlacement&&state.Placed){SetGameStatus(window,state,"Placement complete; manual movement allowed");continue;}

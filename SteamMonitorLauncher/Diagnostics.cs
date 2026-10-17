@@ -29,6 +29,13 @@ public static class Diagnostics {
         using(var writer=new StringWriter()){serializer.Serialize(writer,legacy);saved=writer.ToString();}
         using(var reader=new StringReader(saved))legacy=(Settings)serializer.Deserialize(reader);
         if(legacy.CustomGames.Count!=1||!legacy.Profiles[0].Override||legacy.MonitorKey!="test-monitor")throw new InvalidDataException("Profile/custom-game backup roundtrip failed");
+        var rule=new WindowRule{Id="custom:test",MainExe="Game.exe",HelperTitle="Chat",KeepHelpers=false,HelperKey="helper-display"};
+        if(rule.IsHelper(new Candidate{Executable=@"C:\Game.exe",Title="Game"})||!rule.IsHelper(new Candidate{Executable=@"C:\helper.exe",Title="Settings"})||!rule.IsHelper(new Candidate{Executable=@"C:\GAME.EXE",Title="Game CHAT"}))throw new InvalidDataException("Main/helper window rules failed");
+        if(new WindowRule().IsHelper(new Candidate{Executable="anything.exe",Title="Chat"}))throw new InvalidDataException("Empty rules must preserve existing behavior");
+        legacy.WindowRules.Add(rule);legacy.OfferReconnect=false;
+        using(var writer=new StringWriter()){serializer.Serialize(writer,legacy);saved=writer.ToString();}
+        using(var reader=new StringReader(saved))legacy=(Settings)serializer.Deserialize(reader);
+        if(legacy.OfferReconnect||legacy.WindowRules.Count!=1||legacy.WindowRules[0].HelperKey!="helper-display"||legacy.WindowRules[0].KeepHelpers)throw new InvalidDataException("Window rules/reconnect settings roundtrip failed");
         legacy.FallbackEnabled=true;legacy.FallbackKey="fallback-test";
         legacy.GameOptions.Add(new GameOptions{Id="custom:test",Favorite=true,DelaySeconds=45,StopAfterPlacement=true,LaunchMode="Shortcut",LaunchPath=@"C:\Games\Test.lnk",Artwork=@"artwork\test.png",LastPlayed=new DateTime(2026,1,1,0,0,0,DateTimeKind.Utc)});
         using(var writer=new StringWriter()){serializer.Serialize(writer,legacy);saved=writer.ToString();}

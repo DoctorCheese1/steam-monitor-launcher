@@ -1,0 +1,12 @@
+Steam Monitor Launcher 1.15.0
+
+- Default game monitor: select a screen, then Set as default; existing per-game overrides remain.
+- Compatibility presets: standard windowed, slow startup / ARK, and place once.
+- Reconnect recovery: choose whether to return running games or keep them in place for this session.
+- Detection details: status, monitor source, delay, window results and troubleshooting guidance.
+- Saved placement preview with target screen, bounds and estimate label when no window is running.
+- Full scrollable online release notes and clearly labeled rollback.
+- Per-game main EXE / helper-title rules: leave helpers in place or send them to another display.
+- DPI scaling on tool dialogs and the window picker; font-aware monitor selector rows.
+
+Windows validation covers compilation, startup, installer repair/recovery, settings persistence and rule matching. Real game movement, monitor reconnects and mixed-DPI displays require hardware testing.

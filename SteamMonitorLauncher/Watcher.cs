@@ -7,7 +7,7 @@ public class ProcessRecord {
     public uint Id; public DateTime Born, Seen; public string Path="",LauncherSource=""; public Game Game;
 }
 public class Candidate {
-    public IntPtr Handle; public uint Pid; public DateTime Born; public string Title, Game, GameId, GameFolder;
+    public string Executable=""; public IntPtr Handle; public uint Pid; public DateTime Born; public string Title, Game, GameId, GameFolder;
 }
 public class WatchResult {
     public List<Candidate> Windows=new List<Candidate>();public List<string> ActiveGameIds=new List<string>();
@@ -79,7 +79,7 @@ public class Watcher {
                 Game game;if(!discovered.TryGetValue(record.Path,out game)){game=SteamUnlockedGame(record.Path);discovered[record.Path]=game;}record.Game=game;family[pid]=record;
             }
             if(record.Game!=null)
-                result.Windows.Add(new Candidate{Handle=window.Handle,Pid=pid,Born=record.Born,Title=window.Title,Game=record.Game.Name,GameId=record.Game.Id,GameFolder=record.Game.Folder});
+                result.Windows.Add(new Candidate{Executable=record.Path,Handle=window.Handle,Pid=pid,Born=record.Born,Title=window.Title,Game=record.Game.Name,GameId=record.Game.Id,GameFolder=record.Game.Folder});
         }
         result.Games=catalog.Concat(discovered.Values.Where(d=>!catalog.Any(g=>g.Id==d.Id||String.Equals(g.Executable,d.Executable,StringComparison.OrdinalIgnoreCase)))).OrderBy(g=>g.Name,StringComparer.CurrentCultureIgnoreCase).ToList();
         if((now-lastDiagnostic).TotalSeconds>=30){lastDiagnostic=now;

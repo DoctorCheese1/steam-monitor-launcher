@@ -1,4 +1,4 @@
-VERSION 1.14.1 - SETUP TUTORIAL
+VERSION 1.15.0 - SETUP TUTORIAL
 Six guided steps cover default monitor selection and testing, automatic
 movement, Windows startup/tray use, game settings, manual window tools, and
 a review before saving. Use Back / Next, then Finish setup. Reopen with the

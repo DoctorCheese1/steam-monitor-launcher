@@ -1,0 +1,30 @@
+name: Validate launcher changes
+on:
+  push:
+    branches: ['feature/monitor-controls-1.15.0']
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - name: Compile and validate
+        shell: powershell
+        run: |
+          & .\SteamMonitorLauncher\Install.ps1 -ValidateOnly
+          if ($LASTEXITCODE -ne 0) { throw 'Validation failed' }
+          & .\.github\Test-Installer.ps1
+      - name: Package review build
+        shell: powershell
+        run: |
+          Copy-Item validation-output/SteamMonitorLauncher.exe SteamMonitorLauncher/SteamMonitorLauncher.exe
+          Compress-Archive -Path SteamMonitorLauncher -DestinationPath Steam_Monitor_Launcher_v1.15.0.zip
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: launcher-review-build
+          path: |
+            Steam_Monitor_Launcher_v1.15.0.zip
+            validation-output/logs

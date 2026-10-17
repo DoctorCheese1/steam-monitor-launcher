@@ -11,14 +11,15 @@ using System.Windows.Forms;
 using System.Xml.Serialization;
 using Microsoft.Win32;
 
-[assembly: System.Reflection.AssemblyFileVersion("1.14.1.0")]
-[assembly: System.Reflection.AssemblyVersion("1.14.1.0")]
+[assembly: System.Reflection.AssemblyFileVersion("1.15.0.0")]
+[assembly: System.Reflection.AssemblyVersion("1.15.0.0")]
 
 public class Profile {
     public string Id="", Monitor="", MonitorKey=""; public bool Borderless, Override, UseLayout;
     public int X,Y,Width,Height;
 }
 public class Settings {
+    public bool OfferReconnect=true; public List<WindowRule> WindowRules=new List<WindowRule>();
     public bool SetupCompleted;public List<MonitorPreset> MonitorPresets=new List<MonitorPreset>();
     public string UpdateFeed=ReleaseClient.DefaultFeed;public bool AutoCheckUpdates=true;public bool GitHubFeedConfigured;
     public List<GameOptions> GameOptions=new List<GameOptions>(); public bool FallbackEnabled;public string FallbackKey="";
@@ -78,10 +79,10 @@ public partial class Launcher:Form {
             finally{mutex.ReleaseMutex();}
         }
     }
-    protected override void WndProc(ref Message m){if(m.Msg==0x312){HandleHotkey(m.WParam.ToInt32());return;}if(m.Msg==0x7e){Displays.Invalidate();states.Clear();}if(m.Msg==ShowMessage){OpenSettings();return;}base.WndProc(ref m);}
+    protected override void WndProc(ref Message m){if(m.Msg==0x312){HandleHotkey(m.WParam.ToInt32());return;}if(m.Msg==0x7e){Displays.Invalidate();}if(m.Msg==ShowMessage){OpenSettings();return;}base.WndProc(ref m);}
     public Launcher(bool startHidden,bool selfTest=false){
         background=startHidden;
-        Text="Steam Monitor Launcher 1.14.1";Size=new Size(1080,840);MinimumSize=new Size(980,760);StartPosition=FormStartPosition.CenterScreen;
+        Text="Steam Monitor Launcher 1.15.0";Size=new Size(1080,840);MinimumSize=new Size(980,760);StartPosition=FormStartPosition.CenterScreen;
         Font=new Font("Segoe UI",10);BackColor=Color.FromArgb(20,26,35);ForeColor=Color.FromArgb(233,239,248);AutoScaleDimensions=new SizeF(96,96);AutoScaleMode=AutoScaleMode.Dpi;
         try{if(!selfTest&&File.Exists(Config))using(var f=File.OpenRead(Config))settings=(Settings)new XmlSerializer(typeof(Settings)).Deserialize(f);}catch{settings=new Settings();recoveryNeeded=true;}
         NormalizeSettings(settings);
@@ -116,7 +117,7 @@ public partial class Launcher:Form {
     void OpenSettings(){Show();ShowInTaskbar=true;WindowState=FormWindowState.Normal;Activate();LoadDisplays();}
     void HideToTray(){Hide();ShowInTaskbar=false;if(!hiddenOnce){tray.ShowBalloonTip(2500,"Steam Monitor Launcher","Running in the background. Right-click this icon for settings or Exit.",ToolTipIcon.Info);hiddenOnce=true;}}
     void ExitApp(){exiting=true;Close();}
-    void LoadDisplays(){loading=true;monitors.Items.Clear();var resolved=Displays.Resolve(settings.MonitorKey,settings.Monitor);if(resolved!=null){settings.Monitor=resolved.Screen.DeviceName;if(String.IsNullOrEmpty(settings.MonitorKey)){settings.MonitorKey=resolved.Key;Save();}}foreach(var screen in Screen.AllScreens)monitors.Items.Add(new DisplayItem{Screen=screen});monitors.SelectedIndex=-1;for(int i=0;i<monitors.Items.Count;i++)if(((DisplayItem)monitors.Items[i]).Screen.DeviceName==settings.Monitor)monitors.SelectedIndex=i;loading=false;displayPreview.Invalidate();UpdateIndicator();if(settings.Monitor.Length>0&&monitors.SelectedIndex<0)Say(settings.FallbackEnabled?"Selected display is disconnected; fallback is enabled.":"Selected display is disconnected. Monitoring waits for it to return; choose another display to switch.");}
+    void LoadDisplays(){loading=true;monitors.Items.Clear();var resolved=Displays.Resolve(settings.MonitorKey,settings.Monitor);if(resolved!=null){settings.Monitor=resolved.Screen.DeviceName;if(String.IsNullOrEmpty(settings.MonitorKey)){settings.MonitorKey=resolved.Key;Save();}}foreach(var screen in Screen.AllScreens)monitors.Items.Add(new DisplayItem{Screen=screen});monitors.SelectedIndex=-1;for(int i=0;i<monitors.Items.Count;i++)if(((DisplayItem)monitors.Items[i]).Screen.DeviceName==settings.Monitor)monitors.SelectedIndex=i;loading=false;UpdateDefaultBadge();displayPreview.Invalidate();UpdateIndicator();if(settings.Monitor.Length>0&&monitors.SelectedIndex<0)Say(settings.FallbackEnabled?"Selected display is disconnected; fallback is enabled.":"Selected display is disconnected. Monitoring waits for it to return; choose another display to switch.");}
     void Identify(){int n=0;foreach(var screen in Screen.AllScreens){n++;var f=new Form{FormBorderStyle=FormBorderStyle.None,StartPosition=FormStartPosition.Manual,Bounds=new Rectangle(screen.Bounds.X+40,screen.Bounds.Y+40,370,125),TopMost=true,BackColor=Color.FromArgb(30,90,140),ForeColor=Color.White};f.Controls.Add(new Label{Dock=DockStyle.Fill,Text="Display "+n+"\n"+screen.DeviceName,TextAlign=ContentAlignment.MiddleCenter,Font=new Font("Segoe UI",22,FontStyle.Bold)});var t=new System.Windows.Forms.Timer{Interval=2500};t.Tick+=delegate{t.Stop();f.Close();t.Dispose();};f.Show();t.Start();}}
     void Filter(){string id=gameList.SelectedItem==null?"":((Game)gameList.SelectedItem).Id;gameList.BeginUpdate();gameList.Items.Clear();foreach(var g in games)if((g.Name+" "+g.Source).IndexOf(search.Text,StringComparison.CurrentCultureIgnoreCase)>=0&&(!excludedOnly.Checked||IsExcluded(g)))gameList.Items.Add(g);for(int i=0;i<gameList.Items.Count;i++)if(((Game)gameList.Items[i]).Id==id)gameList.SelectedIndex=i;if(gameList.SelectedIndex<0&&gameList.Items.Count>0)gameList.SelectedIndex=0;gameList.EndUpdate();count.Text=gameList.Items.Count+" / "+games.Count+" games";emptyHint.Visible=gameList.Items.Count==0;emptyHint.Text=games.Count==0?"Your installed games will appear here.\nUse Tools > Library management to add another game.":"No games match this filter.";launchButton.Enabled=gameList.SelectedItem!=null;UpdateExclusionButton();}
     void Launch(){LaunchGame(gameList.SelectedItem as Game);}
@@ -124,7 +125,7 @@ public partial class Launcher:Form {
     void Poll(){if(worker.IsBusy||exiting)return;bool force=refresh;refresh=false;worker.RunWorkerAsync(new PollRequest{Steam=settings.Steam,Refresh=force,Revision=revision,Custom=CustomCatalog()});}
     void Completed(object sender,RunWorkerCompletedEventArgs e){
         if(exiting||IsDisposed)return;if(e.Error!=null){Say("Monitor scan failed; will retry. "+e.Error.Message);return;}
-        var result=(WatchResult)e.Result;if(result.Revision!=revision)return;UpdateSessionState(result);lastCandidates=result.Windows;foreach(var found in result.Windows)launchWaiting.Remove(found.GameId);TrackSessions(result.Windows);
+        var result=(WatchResult)e.Result;if(result.Revision!=revision)return;UpdateSessionState(result);lastCandidates=result.Windows;CheckDisplayReconnect();foreach(var found in result.Windows)launchWaiting.Remove(found.GameId);TrackSessions(result.Windows);
         if(settings.Steam!=result.Steam&&File.Exists(result.Steam)){settings.Steam=result.Steam;Save();}
         if(!games.Select(g=>g.Id+g.Name+g.Folder+g.Executable+g.Arguments).SequenceEqual(result.Games.Select(g=>g.Id+g.Name+g.Folder+g.Executable+g.Arguments))){games=result.Games;Filter();}
         if(games.Count==0){Say("No installed games found. Add games in Tools or locate Steam.");}
@@ -142,7 +143,12 @@ public partial class Launcher:Form {
                 Native.RECT original;if(!Native.GetWindowRect(window.Handle,out original))continue;
                 state=new WindowState{GameId=window.GameId,GameFolder=window.GameFolder,GameName=window.Game,Pid=window.Pid,Born=window.Born,Style=Native.Style(window.Handle),Rect=original};states[window.Handle]=state;
             }
+            var rule=settings.WindowRules.FirstOrDefault(r=>r.Id==window.GameId);
+            bool helper=rule!=null&&rule.IsHelper(window);
+            if(helper&&rule.KeepHelpers){SetGameStatus(window,state,"Helper window left in place by game rule");continue;}
             var profile=settings.Profiles.FirstOrDefault(p=>p.Id==window.GameId&&p.Override);
+            if(helper&&rule!=null)profile=new Profile{Override=true,MonitorKey=rule.HelperKey,Monitor=rule.HelperMonitor};
+            if(reconnectHolds.Contains(window.GameId)){SetGameStatus(window,state,"Display reconnected - choose Move back in Tools");continue;}
             var display=ResolveTarget(profile==null?settings.MonitorKey:profile.MonitorKey,profile==null?settings.Monitor:profile.Monitor);
             if(display==null){SetGameStatus(window,state,"Waiting for selected monitor");state.Pending=false;state.First=DateTime.UtcNow;state.Attempts=0;continue;}
             var movement=Options(window.GameId);
@@ -153,7 +159,7 @@ public partial class Launcher:Form {
             if(movement.StopAfterPlacement&&state.Placed){SetGameStatus(window,state,"Placement complete; manual movement allowed");continue;}
             if((DateTime.UtcNow-state.Observed).TotalSeconds<movement.DelaySeconds){SetGameStatus(window,state,"Waiting for startup delay");continue;}
             var screen=display.Screen;bool useBorder=profile==null?settings.Borderless:profile.Borderless;
-            if(Native.IsIconic(window.Handle))continue; // Never undo a user's minimize action.
+            if(Native.IsIconic(window.Handle)){SetGameStatus(window,state,"Minimized - waiting for you to restore it");continue;} // Never undo a user's minimize action.
             DateTime now=DateTime.UtcNow;
             Native.RECT rect;if(!Native.GetWindowRect(window.Handle,out rect)){SetGameStatus(window,state,"Cannot read window position");continue;}
             if(state.Pending){if(RectClose(rect,state.Expected)){SetGameStatus(window,state,"Moved and verified");state.Pending=false;state.Placed=true;}
@@ -172,7 +178,7 @@ public partial class Launcher:Form {
     }
     void ManualMove(){using(var form=CreateWindowPicker())form.ShowDialog(this);}
     internal Form CreateWindowPicker(){
-        var form=new Form{Text="Move a running window",Size=new Size(850,680),MinimumSize=new Size(760,600),StartPosition=FormStartPosition.CenterParent,BackColor=Theme.Card,ForeColor=Theme.Text,Icon=appIcon,Font=Font};
+        var form=new Form{Text="Move a running window",Size=new Size(850,680),MinimumSize=new Size(760,600),StartPosition=FormStartPosition.CenterParent,BackColor=Theme.Card,ForeColor=Theme.Text,Icon=appIcon,Font=Font,AutoScaleDimensions=new SizeF(96,96),AutoScaleMode=AutoScaleMode.Dpi};
         var layout=new TableLayoutPanel{Dock=DockStyle.Fill,Padding=new Padding(16),ColumnCount=1,RowCount=6};layout.ColumnStyles.Add(new ColumnStyle(SizeType.Percent,100));
         foreach(int height in new[]{50,42,38})layout.RowStyles.Add(new RowStyle(SizeType.Absolute,height));layout.RowStyles.Add(new RowStyle(SizeType.Percent,100));layout.RowStyles.Add(new RowStyle(SizeType.Absolute,65));layout.RowStyles.Add(new RowStyle(SizeType.Absolute,110));form.Controls.Add(layout);
         layout.Controls.Add(new Label{Text="Choose a display, then search for a window or use Pick window by click. Move, remember its monitor, or undo without closing this picker.",Dock=DockStyle.Fill},0,0);
